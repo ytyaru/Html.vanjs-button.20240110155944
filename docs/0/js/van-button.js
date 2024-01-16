@@ -22,8 +22,12 @@ class VanButton {
         //attr.onblur = (e)=>{console.log('blur');this.#isSelected=false;this.#setBlurColor();}
         attr.onblur = (e)=>{console.log('blur');this.#isSelected=false;if(!this._isHover){this.#setBlurColor()};}
 
-        attr.onmouseenter = (e)=>{console.log('mouseenter');this._isHover=true;}
-        attr.onmouseleave = (e)=>{console.log('mouseleave');this._isHover=false;}
+//        attr.onmouseenter = (e)=>{console.log('mouseenter');this._isHover=true;}
+//        attr.onmouseleave = (e)=>{console.log('mouseleave');this._isHover=false;}
+//        attr.onmouseenter = (e)=>{console.log('mouseenter');this._isHover=true;if(!this._isDowning){this.#setFocusColor()}}
+//        attr.onmouseleave = (e)=>{console.log('mouseleave');this._isHover=false;if(!this._isHover){this.#setBlurColor()};}
+        attr.onmouseenter = (e)=>{console.log('mouseenter');this._isHover=true;this.#setFocusColor();}
+        attr.onmouseleave = (e)=>{console.log('mouseleave');this._isHover=false;this.#setBlurColor();}
 //        attr.onmouseout = (e)=>{console.log('mouseout');this.#isSelected=false;if(this.#hasFocus(e)){this.#setFocusColor()}else{this.#setBlurColor()}this._text.val='ボタン';}
 
         attr.onpointerenter = (e)=>{console.log('pointerenter');this.#isSelected=true;this.#setFocusColor()}
@@ -64,11 +68,12 @@ class VanButton {
         this._text.val = 'ボタン（フォーカスが当たっている）'
     }
     #setBlurColor() {
-        if(!this._isDowning) {
+        console.log('#setBlurColor()')
+//        if(!this._isDowning) {
             this._color.fore = '#000'
             this._color.back = '#eee'
             this._text.val = 'ボタン（フォーカスが外れている）'
-        }
+//        }
     }
     #setDownColor() {
         this._color.fore = '#a00'
