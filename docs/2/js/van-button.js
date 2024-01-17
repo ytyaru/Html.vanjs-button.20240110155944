@@ -20,7 +20,6 @@ class VanButton {
         this._style = vanX.reactive({
             'display': 'flex', // flex,grid,table,none,inline,inline-block,block
             'color': {fore:'#000', back:'#eee'},
-            //'border': {width:'2px', style:'dashed', color:'#000'},
             'border': {width:'2px', style:'solid', color:'#dd0'},
             'outline': {width:'2px', style:'dashed', color:'#000', offset:'2px' },
         })
@@ -73,33 +72,10 @@ class VanButton {
     }
     #hasFocus(e) { return (e.target===document.activeElement) }
     #style() { return `user-select:none;cursor:pointer;box-sizing:border-box;${this.#outline()}${this.#border()}${this.#display()}justify-content:center;align-items:center;padding:0;margin:0;color:${this._style.color.fore};background-color:${this._style.color.back};` }
-    //#display() { console.log(`${this._style.display}`); return `display:${this._style.display};`; }
     #display() { return `display:${this._style.display};`; }
-    //#border() { return `border:${this._style.border.width} ${this._style.border.style} ${this._style.border.color};` }
     #border() { return `border-width:${this._style.border.width};border-style:${this._style.border.style};border-color:${this._style.border.color};${this.#borderRadius()}` }
     #borderRadius() { return `border-radius:8px;` }
     #outline() { return `outline-width:${this._style.outline.width};outline-style:${this._style.outline.style};outline-color:${this._style.outline.color};outline-offset:${this._style.outline.offset};` }
-//    #border() { return `border:1px solid #000;` }
-    /*
-    #updateState() {
-        if (this.States.isHide===this._state) { }
-        else if (this.States.isDisabled===this._state) { }
-        else if (this._device.keyboard.isFocus || this._device.gamepad.isFocus || this._device.mouse.isHover) {
-            this._state = this.States.isRiveted
-            if (this._device.keyboard.isDown || this._device.gamepad.isDown || this._device.mouse.isDown || this._device.touch.isTouch) {
-                this._state = this.States.isDown
-            }
-        }
-        else if (this._device.keyboard.isDown || this._device.gamepad.isDown || this._device.mouse.isDown || this._device.touch.isTouch) {
-            this._state = this.States.isDown
-        }
-        else { this._state = this.States.isFree; }
-        console.log('this._state:', this._state)
-        console.log('key:', this._device.keyboard.isFocus, 'pad:', this._device.gamepad.isFocus, 'hov:', this._device.mouse.isHover)
-        console.log('key:', this._device.keyboard.isDown, 'pad:', this._device.gamepad.isDown, 'mou:', this._device.mouse.isDown, 'tou:', this._device.touch.isTouch)
-        this.#updateStyle()
-    }
-    */
     #updateState() {
         if (this.States.isHide===this._state) { }
         else if (this.States.isDisabled===this._state) { }
@@ -146,19 +122,8 @@ class VanButton {
         console.log('#setStyleRiveted()', this._style.color.fore, this._style.color.fore.val)
         this._style.color.fore = this._themeColor.base.hex()
         this._style.color.back = this._themeColor.main.hex()
-        /*
-        this._style.color.back = chroma.mix(this._themeColor.main, this._themeColor.base).hex()
-        this._style.color.fore = () =>{
-            console.log('=====================================')
-            const cands = [this._themeColor.base.hex(), '#000', '#fff'].map(c=>({contrast:chroma.contrast(c, this._style.color.back), color:c}))
-            cands.sort((a,b)=>d.contrast - a.contrast)
-            console.log(cands)
-            return cands[0]
-        }
-        */
         this._style.border.color = this._style.color.fore
         this._style.outline.width = '2px'
-        //this._style.outline.color = this._style.color.fore
         this._style.outline.color = this._themeColor.accent.hex()
         console.log('fore:', this._style.color.fore)
         console.log('back:', this._style.color.back)
