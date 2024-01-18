@@ -6,7 +6,7 @@ class VanButton {
     constructor(text, onPushed, onLongPushed) {
         this._state = this.States.isFree
         this._device = {
-            'keyboard':{name:'', isFocus:false, isDown:false, event:null},
+            'keyboard':{name:'', isFocus:false, isDown:false, event:null, pushed:{start:0, end:0}},
             'gamepad':{name:'', isFocus:false, isDown:false, event:null},
             'mouse':{name:'', isHover:false, isDown:false, event:null},
             'touch':{name:'', isTouch:false, event:null},
@@ -130,16 +130,30 @@ class VanButton {
     #onPushed(e) {
         this._pushed.end = Date.now()
         this.#setOnceTime('end')
+        if (this.States.isDisabled===this._state) {
+            if (this.options.isOnce) { // disabled時間内に押下するとdisabled解放時間が延長する
+                if (this._timeout.disabled) { clearTimeout(this._timeout.disabled); }
+                this._timeout.disabled = setTimeout(()=>{ this._state = this.States.isFree; this.#clearOnceTime(); this.#updateState(); }, this._pushed.once.time)
+            }
+            return
+        }
         if (this.#isLognPushed()) { return }
         this.#clearTimeoutLongPushed(e)
         if (this.options.isOnce) {
             //if (this.#isDuplicatePushed()) { return } // 超短時間に２回以上実行要求されたら
-            if (this.#isDuplicatePushed()) { console.log('DuplicatePushed!!!!!!!!!!!!!!!!!!'); return } // 超短時間に２回以上実行要求されたら
-            console.log('oncePushed !!!!!!!!!!!!!!!!!!')
+            if (this.#isDuplicatePushed()) { console.log('%c DuplicatePushed!!!!!!!!!!!!!!!!!!', 'background-color: red; color: white;'); return } // 超短時間に２回以上実行要求されたら
+            console.log('%c oncePushed !!!!!!!!!!!!!!!!!!', 'background-color: green; color: white;')
             this.options.onPushed(e)// まだ一回しか要求されてない、２回以上要求されたが一定時間以上の間隔がある
-            this._isDisabled = true
+//            this._isDisabled = true
+            this._state = this.States.isDisabled
+            this.#updateState()
             if (this._timeout.disabled) { clearTimeout(this._timeout.disabled); }
-            this._timeout.disabled = setTimeout(()=>{ this._isDisabled=false; this.#clearOnceTime(); }, this._pushed.once.time)
+            this._timeout.disabled = setTimeout(()=>{ this._state = this.States.isFree; this.#clearOnceTime(); this.#updateState(); }, this._pushed.once.time)
+            //this._timeout.disabled = setTimeout(()=>{ this._state = this.States.isFree; this._isDisabled=false; this.#clearOnceTime(); this.#updateState(); }, this._pushed.once.time)
+//            if (this._timeout.disabled) { clearTimeout(this._timeout.disabled); }
+//            this._timeout.disabled = setTimeout(()=>{ this._isDisabled=false; this.#clearOnceTime(); }, this._pushed.once.time)
+
+            
             /*
             if (this.#isDuplicatePushed()) { // 超短時間に２回以上実行要求されたら
                 //this.options.onPushed(e)
@@ -174,12 +188,15 @@ class VanButton {
         return ((this._pushed.once.last.start - this._pushed.once.first.end) < this._pushed.once.time)
     }
     #setOnceTime(se) { // se: 'start'/'end'
-        if (0===this._pushed.once.first[se]) { this._pushed.once.first[se] = Date.now() }
-        else if (0===this._pushed.once.last[se]){ this._pushed.once.last[se] = Date.now() }
+        if (0===this._pushed.once.first[se]) { this._pushed.once.first[se] = Date.now(); }
+        else { this._pushed.once.last[se] = Date.now() }
+//        else if (0===this._pushed.once.last[se]){ this._pushed.once.last[se] = Date.now() }
         console.log('#setOnceTime(se)', se, this._pushed.once, (this._pushed.once.first[se]), (this._pushed.once.last[se]))
         console.log(this._pushed.once.first.start, this._pushed.once.first.end)
         console.log(this._pushed.once.last.start, this._pushed.once.last.end)
     }
+    /*
+    */
     /*
     #setOnceStart() {
         if (0===this._pushed.once.first.start) { this._pushed.once.first.start = Date.now() }
@@ -200,14 +217,32 @@ class VanButton {
     #pushedMs() { return this._pushed.end - this._pushed.start }
     #onKeydown(e) {
         console.log('#onKeydown(e):', e.key, ' '===e.key)
-        if      ([' ', 'Enter'].some(k=>k===e.key)) { this._pushed.start = Date.now(); this._device.keyboard.isDown = true; this.#updateState(); }
+        if      ([' ', 'Enter'].some(k=>k===e.key)) { this.#pushedKeyboard(e); }
+        //if      ([' ', 'Enter'].some(k=>k===e.key)) { this.#pushStart(); this._device.keyboard.isDown = true; this.#updateState(); }
+        //if      ([' ', 'Enter'].some(k=>k===e.key)) { this._pushed.start = Date.now(); this._device.keyboard.isDown = true; this.#updateState(); }
 //        else if ('Enter'===e.key) { this._device.keyboard.isDown = true; this.#updateState(); }
 //        else if ('Esc'===e.key) {  }
 //        else if ('F1'===e.key) {  }
     }
+    #pushedKeyboard(e) {
+        this._device.keyboard.isDown = true
+        if (0===this._device.keyboard.pushed.start) {
+            this._device.keyboard.pushed.start = Date.now()
+            this.#pushStart()
+            this.#updateState();
+        }
+    }
+    #releasedKeyboard(e) {
+        this._device.keyboard.isDown = false
+//        if (0===this._device.keyboard.pushed.end) { this._device.keyboard.pushed.end = Date.now() }
+        this.#updateState()
+        this.#onPushed(e);
+        this._device.keyboard.pushed.start = 0
+    }
     #onKeyup(e) {
         console.log('#onKeyup(e):', e.key)
-        if ([' ', 'Enter'].some(k=>k===e.key)) { this._device.keyboard.isDown = false; this.#updateState(); this.#onPushed(e); }
+        if ([' ', 'Enter'].some(k=>k===e.key)) { this.#releasedKeyboard(e); }
+        //if ([' ', 'Enter'].some(k=>k===e.key)) { this._device.keyboard.isDown = false; this.#updateState(); this.#onPushed(e); }
     }
     #hasFocus(e) { return (e.target===document.activeElement) }
     #style() { return `user-select:none;cursor:pointer;box-sizing:border-box;${this.#outline()}${this.#border()}${this.#display()}justify-content:center;align-items:center;padding:0;margin:0;color:${this._style.color.fore};background-color:${this._style.color.back};` }
@@ -252,8 +287,8 @@ class VanButton {
     }
     #setStyleHide() { this._style.display = 'none' }
     #setStyleDisabled() {
-        this._style.color.fore = chroma.average(this._themeColor.main, this._themeColor.base).hex()
-        this._style.color.back = chroma.average(this._themeColor.main, this._themeColor.base).hex()
+        this._style.color.fore = chroma.mix(this._themeColor.main, this._themeColor.base).hex()
+        this._style.color.back = this._themeColor.base.hex()
         this._style.border.color = this._style.color.fore
         this._style.outline.width = '0px'
     }
