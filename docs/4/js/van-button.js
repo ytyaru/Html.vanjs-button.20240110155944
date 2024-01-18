@@ -40,9 +40,12 @@ class VanButton {
             end  : Date.now(), // 離した時点
             long : 1000 * 2,   // 長押し判定する押下時間（この時間未満ならisRun, この時間以上ならisLongRunを実行する）
             once : {           // 連打防止（この時間未満に再実行要求されても無視する。一定時間isDisabledにすることで防ぐ）
-                first: { start: Date.now(), end: Date.now() },
-                last:  { start: Date.now(), end: Date.now() },
+                first: { start: 0, end: 0 },
+                last:  { start: 0, end: 0 },
+//                first: { start: Date.now(), end: Date.now() },
+//                last:  { start: Date.now(), end: Date.now() },
                 time: 1000 * 2,
+//                time: 1000 * 60 * 60 * 1,
             }
         }
         this._timeout = { // setTimeout(), clearTimeout()
@@ -128,13 +131,15 @@ class VanButton {
         this._pushed.end = Date.now()
         this.#setOnceTime('end')
         if (this.#isLognPushed()) { return }
-        this.#clearTimeoutLongPushed()
+        this.#clearTimeoutLongPushed(e)
         if (this.options.isOnce) {
-            if (this.#isDuplicatePushed()) { return } // 超短時間に２回以上実行要求されたら
+            //if (this.#isDuplicatePushed()) { return } // 超短時間に２回以上実行要求されたら
+            if (this.#isDuplicatePushed()) { console.log('DuplicatePushed!!!!!!!!!!!!!!!!!!'); return } // 超短時間に２回以上実行要求されたら
+            console.log('oncePushed !!!!!!!!!!!!!!!!!!')
             this.options.onPushed(e)// まだ一回しか要求されてない、２回以上要求されたが一定時間以上の間隔がある
             this._isDisabled = true
             if (this._timeout.disabled) { clearTimeout(this._timeout.disabled); }
-            this._timeout.disabled = setTimeout(()=>{ this._isDisabled=false; this.#clearOnceTime(); })
+            this._timeout.disabled = setTimeout(()=>{ this._isDisabled=false; this.#clearOnceTime(); }, this._pushed.once.time)
             /*
             if (this.#isDuplicatePushed()) { // 超短時間に２回以上実行要求されたら
                 //this.options.onPushed(e)
@@ -160,6 +165,7 @@ class VanButton {
     }
     //#isDuplicatePushed() { return ((this._pushed.once.last.start - this._pushed.once.first.end) < this._pushed.once.time) }
     #isDuplicatePushed() {
+        console.log('this._pushed.once', this._pushed.once, [this._pushed.once.first.start, this._pushed.once.first.end, this._pushed.once.last.start, this._pushed.once.last.end].some(v=>v===0), ((this._pushed.once.last.start - this._pushed.once.first.end) < this._pushed.once.time))
         if ([this._pushed.once.first.start, this._pushed.once.first.end, this._pushed.once.last.start, this._pushed.once.last.end].some(v=>v===0)) { return false }
 //        if (0 === this._pushed.once.first.start) { return false }
 //        if (0 === this._pushed.once.first.end) { return false }
@@ -170,6 +176,9 @@ class VanButton {
     #setOnceTime(se) { // se: 'start'/'end'
         if (0===this._pushed.once.first[se]) { this._pushed.once.first[se] = Date.now() }
         else if (0===this._pushed.once.last[se]){ this._pushed.once.last[se] = Date.now() }
+        console.log('#setOnceTime(se)', se, this._pushed.once, (this._pushed.once.first[se]), (this._pushed.once.last[se]))
+        console.log(this._pushed.once.first.start, this._pushed.once.first.end)
+        console.log(this._pushed.once.last.start, this._pushed.once.last.end)
     }
     /*
     #setOnceStart() {
