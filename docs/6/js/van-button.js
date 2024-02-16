@@ -55,7 +55,7 @@ class VanButton {
         if (!this.options.hasOwnProperty('onLongPushed')) { this.options.onLongPushed = ((Type.isFunction(onLongPushed)) ? onLongPushed : ()=>alert('Long pushed button !!')) }
         console.log('options:',this.options)
         this._text = van.state(this.options.text)
-        return div(this.#makeAttr(), ()=>this._text.val) // div要素はonfocusが機能しない?!
+        return div({class:'van-button'}, this.#makeAttr(), ()=>this._text.val) // div要素はonfocusが機能しない?!
     }
     #makeAttr() {
         const attr = {}
