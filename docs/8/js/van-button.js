@@ -4,6 +4,11 @@ class VanButton extends HTMLElement {
     States = {'isFree':0, 'isHide':1, 'isDisabled':2, 'isRiveted':3, 'isDown':4, 'isLongDowned':5 }
     constructor() {
         super()
+        this.options = {
+            isOnce: true,
+            onPush: (e)=>{},
+            onHold: (e)=>{},
+        }
         this._events = {
             push: new CustomEvent('push', {onced:true, time:100, extended:true}),
             hold: new CustomEvent('hold', {time:2000}),
@@ -23,10 +28,13 @@ class VanButton extends HTMLElement {
             accent: chroma('#dd0'),
         }
         this._style = vanX.reactive({
-            'display': 'flex', // flex,grid,table,none,inline,inline-block,block
+            'display': 'inline-block', // flex,grid,table,none,inline,inline-block,block
             'color': {fore:'#000', back:'#eee'},
-            'border': {width:'2px', style:'solid', color:'#dd0', radius:'8px'},
-            'outline': {width:'2px', style:'dashed', color:'#000', offset:'2px' },
+            'border': {width:'2px', style:'solid', color:'#dd0', radius:'0px'},
+            'outline': {width:'2px', style:'dashed', color:'#f00', offset:'2px' },
+//            'color': {fore:'inherit', back:'inherit'},
+//            'border': {width:'inherit', style:'inherit', color:'inherit', radius:'inherit'},
+//            'outline': {width:'inherit', style:'inherit', color:'inherit', offset:'inherit' },
         })
         this._push = {       // 押下時間（ms）
             start: Date.now(), // 押下した時点
@@ -55,8 +63,8 @@ class VanButton extends HTMLElement {
     attributeChangedCallback(property, oldValue, newValue) {
         if (oldValue === newValue) return;
         switch(property) {
-            case 'onpush': 
-            case 'onhold': return this.#setFn(property, oldValue, newValue)
+            case 'onpush': return this.#setFn('onPush', oldValue, newValue)
+            case 'onhold': return this.#setFn('onHold', oldValue, newValue)
             case 'onced':
             case 'extended':
             case 'radiused':
@@ -68,7 +76,11 @@ class VanButton extends HTMLElement {
         }
         this[ property ] = newValue;
     }
-    #setFn(property, oldValue, newValue) { if ('function'===typeof newValue) { this[property] = newValue } }
+    //#setFn(property, oldValue, newValue) { if ('function'===typeof newValue) { this[property] = newValue } }
+    #setFn(property, oldValue, newValue) { this.options[property] = new Function(newValue) }
+    #setPush(property, oldValue, newValue) { this.options.onPush = new Function(newValue) }
+    #setHold(property, oldValue, newValue) { this.options.onHold= new Function(newValue) }
+
     #setBool(property, oldValue, newValue) { if ('boolean'===typeof newValue) { this[property] = newValue } }
     #set(property, oldValue, newValue) { this[property] = newValue }
 
@@ -76,17 +88,19 @@ class VanButton extends HTMLElement {
     set onhold(fn) { this.options.onHold = fn }
     set onced(v) { this.options.isOnce = v }
     #addEventListener() {
-        this.addEventListener('push', function(e) {
+        this.addEventListener('push', async(e)=>{
             console.log(e);
+            this.options.onPush(e)
         });
-        this.addEventListener('hold', function(e) {
+        this.addEventListener('hold', async(e)=>{
             console.log(e);
+            this.options.onHold(e)
         });
     }
 
     #makeAttr() {
         this.classList.add('van-button')
-        this.tabindex = 0 // フォーカス可能にする
+        this.tabIndex = 0 // フォーカス可能にする
         this.onkeydown = (e)=>this.#onKeydown(e)
         this.onkeyup = (e)=>this.#onKeyup(e)
         this.onfocus = (e)=>{console.log('focus');this._device.keyboard.isFocus=true;this.#updateState();}
@@ -100,13 +114,15 @@ class VanButton extends HTMLElement {
         this.onpointerdown = (e)=>{console.log('pointerdown');this.#pushStart();this._device.touch.isTouch=true;this.#updateState();}
         this.onpointerup = (e)=>{console.log('pointerup');this._device.touch.isTouch=false;this.#updateState();this.#onPush(e);}
         this.onpointercancel = (e)=>{console.log('pointercancel');this._device.touch.isTouch=false;this.#updateState();}
-        this.style = ()=>this.#style()
+        this.style.cssText = this.#style()
     }
     #pushStart() {
         this._push.start = Date.now()
         this.#setOnceTime('start')
         this.#clearTimeoutHold()
-        this._timeout.hold = setTimeout(()=>this.options.onHold(), this._push.hold)
+        //this._timeout.hold = setTimeout(()=>this.options.onHold(), this._push.hold)
+        this._timeout.hold = setTimeout(()=>this.dispatchEvent(new CustomEvent('hold')), this._push.hold)
+        //this.dispatchEvent(new CustomEvent('hold', {time:2000}))
     }
     #clearTimeoutHold() { if (this._timeout.hold) { clearTimeout(this._timeout.hold) } }
     #onPush(e) {
@@ -124,12 +140,17 @@ class VanButton extends HTMLElement {
         if (this.options.isOnce) {
             if (this.#isDuplicatePush()) { console.log('%c DuplicatePush!!!!!!!!!!!!!!!!!!', 'background-color: red; color: white;'); return } // 超短時間に２回以上実行要求されたら
             console.log('%c oncePush !!!!!!!!!!!!!!!!!!', 'background-color: green; color: white;')
-            this.options.onPush(e)// まだ一回しか要求されてない、２回以上要求されたが一定時間以上の間隔がある
+//            this.options.onPush(e)// まだ一回しか要求されてない、２回以上要求されたが一定時間以上の間隔がある
+            this.dispatchEvent(new CustomEvent('push'))
+            //this.dispatchEvent(new CustomEvent('push', {onced:true, time:100, extended:true}))
+            //this.dispatchEvent(new CustomEvent('hold', {time:2000}))
+
             this._state = this.States.isDisabled
             this.#updateState()
             if (this._timeout.disabled) { clearTimeout(this._timeout.disabled); }
             this._timeout.disabled = setTimeout(()=>{ this._state = this.States.isFree; this.#clearOnceTime(); this.#updateState(); }, this._push.once.time)
-        } else { this.options.onPush(e) }
+        //} else { this.options.onPush(e) }
+        } else { this.dispatchEvent(new CustomEvent('push')) }
         this._push.start = Date.now()
         console.log(e)
     }
