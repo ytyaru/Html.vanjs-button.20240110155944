@@ -14,12 +14,13 @@ window.addEventListener('DOMContentLoaded', (event) => {
     b3.style.color = '#000'
     b3.style.backgroundColor = '#fff'
     b3.style.border = '1px solid #000'
+    b3.onced = true
 
     // 動的生成
-    const b4 = document.createElement('van-button')
-    b4.id = 'b4'
-    b4.innerText = 'ボタン4'
-    document.body.appendChild(b4)
+    const b9 = document.createElement('van-button')
+    b9.id = 'b9'
+    b9.innerText = 'ボタン9'
+    document.body.appendChild(b9)
 
     // 動的生成（van.js）
     console.log(van.tags.vanButton()) // <vanbutton></vanbutton>
