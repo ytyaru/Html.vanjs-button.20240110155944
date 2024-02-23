@@ -1,11 +1,32 @@
 window.addEventListener('DOMContentLoaded', (event) => {
     console.log('DOMContentLoaded!!');
+
+    // イベント追加
     document.querySelector('#b2').addEventListener('push', async(e)=>{
         alert('ボタン２を押した')
     })
     document.querySelector('#b2').addEventListener('hold', async(e)=>{
         alert('ボタン２を長〜く押した')
     })
+
+    // スタイル設定
+    const b3 = document.querySelector('#b3')
+    b3.style.color = '#000'
+    b3.style.backgroundColor = '#fff'
+    b3.style.border = '1px solid #000'
+
+    // 動的生成
+    const b4 = document.createElement('van-button')
+    b4.id = 'b4'
+    b4.innerText = 'ボタン4'
+    document.body.appendChild(b4)
+
+    // 動的生成（van.js）
+    console.log(van.tags.vanButton()) // <vanbutton></vanbutton>
+    console.log(van.tags.VanButton()) // <vanbutton></vanbutton>
+    console.log(van.tags['van-button'].vanButton()) // van.tags.van-button.vanButton is not a function
+//    van.add(document.body, b4)
+
     van.add(document.body, 
         van.tags.button({
             onclick:()=>{

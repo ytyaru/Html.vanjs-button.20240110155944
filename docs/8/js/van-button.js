@@ -2,6 +2,14 @@
 class VanButton extends HTMLElement {
     static #ATTRS = 'onpush,onhold,onced extended radiused disabled,hold,once,radius'.split(',')
     States = {'isFree':0, 'isHide':1, 'isDisabled':2, 'isRiveted':3, 'isDown':4, 'isLongDowned':5 }
+    static ColorSchemes = {
+        'none':null,
+        'light':{base:chroma('#ddd'), main:chroma('#000'), accent:chroma('#d82')},  // 白黒
+        'dark':{base:chroma('#000'), main:chroma('#ddd'), accent:chroma('#dd0')},   // 白黒
+        'noon':{base:chroma('#fff'), main:chroma('#000'), accent:chroma('#d82')},   // 昼（明）
+        'night':{base:chroma('#000'), main:chroma('#0d0'), accent:chroma('#dd0')},  // 夜（青光無）
+        'custom':{base:chroma('#ddd'), main:chroma('#000'), accent:chroma('#d82')},
+    }
     constructor() {
         super()
         this.options = {
@@ -30,8 +38,9 @@ class VanButton extends HTMLElement {
         this._style = vanX.reactive({
             'display': 'inline-block', // flex,grid,table,none,inline,inline-block,block
             'color': {fore:'#000', back:'#eee'},
-            'border': {width:'2px', style:'solid', color:'#dd0', radius:'0px'},
-            'outline': {width:'2px', style:'dashed', color:'#f00', offset:'2px' },
+            'border': {width:'1px', style:'solid', color:'#dd0', radius:'0px'},
+            //'outline': {width:'2px', style:'dashed', color:'#f00', offset:'2px' },
+            'outline': {width:'0px', style:'dashed', color:'#f00', offset:'0px' },
 //            'color': {fore:'inherit', back:'inherit'},
 //            'border': {width:'inherit', style:'inherit', color:'inherit', radius:'inherit'},
 //            'outline': {width:'inherit', style:'inherit', color:'inherit', offset:'inherit' },
@@ -51,11 +60,19 @@ class VanButton extends HTMLElement {
             'disabled': null,
         }
 //        this._element = this.#makeHtml(text, onPush, onHold)
-        this.#updateState() 
+//        this.#updateState() 
     }
     connectedCallback() {
+        console.error(this.style.color, this.style.backgroundColor, Css.get('color', this), Css.get('background-color', this), this.style.backgroundColor, Css.get('color', this.parentElement), Css.get('background-color', document.body), Css.get('color', this.parentElement), Css.get('background-color', document.body))
+        //this._colorScheme = this.ColorSchemes.light
+        //this._colorScheme = this.ColorSchemes.light
+        //this._colorScheme = VanButton.ColorSchemes.light
+        this._colorScheme = this.constructor.ColorSchemes.light
+        this.#setStyle()
         this.#makeAttr()
         this.#addEventListener()
+        this.#updateState() 
+        console.error(this.style.color, this.style.backgroundColor, Css.get('color', this), Css.get('background-color', this), this.style.backgroundColor, Css.get('color', this.parentElement), Css.get('background-color', document.body), Css.get('color', this.parentElement), Css.get('background-color', document.body))
     }
     disconnectedCallback() {}
     adoptedCallback() {}
@@ -97,7 +114,15 @@ class VanButton extends HTMLElement {
             this.options.onHold(e)
         });
     }
-
+    set colorScheme(v) {
+        if (this.ColorSchemes.hasOwnProperty(v)) {
+            this._colorScheme = this.ColorSchemes[v]
+            this.#setStyle()
+        }
+    }
+    set baseColor(v) { this.ColorSchemes.custom.base = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
+    set mainColor(v) { this.ColorScheme.custom.main = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
+    set accentColor(v) { this.ColorScheme.custom.accent = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
     #makeAttr() {
         this.classList.add('van-button')
         this.tabIndex = 0 // フォーカス可能にする
@@ -114,7 +139,8 @@ class VanButton extends HTMLElement {
         this.onpointerdown = (e)=>{console.log('pointerdown');this.#pushStart();this._device.touch.isTouch=true;this.#updateState();}
         this.onpointerup = (e)=>{console.log('pointerup');this._device.touch.isTouch=false;this.#updateState();this.#onPush(e);}
         this.onpointercancel = (e)=>{console.log('pointercancel');this._device.touch.isTouch=false;this.#updateState();}
-        this.style.cssText = this.#style()
+//        this.style.cssText = this.#style()
+        console.warn(this.style.cssText)
     }
     #pushStart() {
         this._push.start = Date.now()
@@ -233,43 +259,84 @@ class VanButton extends HTMLElement {
     }
     #setStyleFree() {
         console.log('#setStyleFree()', this._style.color.fore, this._style.color.fore.val)
-        this._style.color.fore = this._themeColor.main.hex() // Css.get('--cs-main')
-        this._style.color.back = this._themeColor.base.hex() // Css.get('--cs-base')
-        this._style.border.color = this._themeColor.accent.hex()
-        this._style.outline.width = '0px'
+        this._style.color.fore = this._colorScheme.main.hex() // Css.get('--cs-main')
+        this._style.color.back = this._colorScheme.base.hex() // Css.get('--cs-base')
+        this._style.border.color = this._style.color.fore
+        //this._style.border.color = this._colorScheme.accent.hex()
+//        this._style.color.fore = this._themeColor.main.hex() // Css.get('--cs-main')
+//        this._style.color.back = this._themeColor.base.hex() // Css.get('--cs-base')
+//        this._style.border.color = this._themeColor.accent.hex()
+//        this._style.outline.width = '0px'
+        this.style.outlineWidth = '0px'
         console.log('fore:', this._style.color.fore)
         console.log('back:', this._style.color.back)
+        this.#setStyle()
     }
-    #setStyleHide() { this._style.display = 'none' }
+    #setStyleHide() { this._style.display = 'none'; this.#setStyle(); }
     #setStyleDisabled() {
-        this._style.color.fore = chroma.mix(this._themeColor.main, this._themeColor.base).hex()
-        this._style.color.back = this._themeColor.base.hex()
+        this._style.color.fore = chroma.mix(this._colorScheme.main, this._colorScheme.base).hex()
+        this._style.color.back = this._colorScheme.base.hex()
+//        this._style.color.fore = chroma.mix(this._themeColor.main, this._themeColor.base).hex()
+//        this._style.color.back = this._themeColor.base.hex()
         this._style.border.color = this._style.color.fore
-        this._style.outline.width = '0px'
+        //this._style.outline.width = '0px'
+        this.style.outlineWidth = '0px'
+        this.#setStyle()
     }
     #setStyleRiveted() {
         console.log('#setStyleRiveted()', this._style.color.fore, this._style.color.fore.val)
-        this._style.color.fore = this._themeColor.base.hex()
-        this._style.color.back = this._themeColor.main.hex()
+        this._style.color.fore = this._colorScheme.base.hex()
+        this._style.color.back = this._colorScheme.main.hex()
+//        this._style.color.fore = this._themeColor.base.hex()
+//        this._style.color.back = this._themeColor.main.hex()
         this._style.border.color = this._style.color.fore
-        this._style.outline.width = '2px'
-        this._style.outline.color = this._themeColor.accent.hex()
+        //this._style.outline.width = '2px'
+        this.style.outlineWidth = this._style.outline.width
+//        this._style.outline.color = this._themeColor.accent.hex()
+        this._style.outline.color = this._colorScheme.accent.hex()
         console.log('fore:', this._style.color.fore)
         console.log('back:', this._style.color.back)
+        this.#setStyle()
     }
     #setStyleDown() {
-        this._style.color.fore = this._themeColor.accent.hex()
-        this._style.color.back = this._themeColor.base.hex()
+        this._style.color.fore = this._colorScheme.accent.hex()
+        this._style.color.back = this._colorScheme.base.hex()
+//        this._style.color.fore = this._themeColor.accent.hex()
+//        this._style.color.back = this._themeColor.base.hex()
         this._style.border.color = this._style.color.fore
         this._style.outline.width = '2px'
+        this.#setStyle()
     }
     #setStyleLongDown() {
-        this._style.color.fore = this._themeColor.accent.hex()
-        this._style.color.back = this._themeColor.base.hex()
+        this._style.color.fore = this._colorScheme.accent.hex()
+        this._style.color.back = this._colorScheme.base.hex()
+//        this._style.color.fore = this._themeColor.accent.hex()
+//        this._style.color.back = this._themeColor.base.hex()
         this._style.border.color = this._style.color.fore
         this._style.outline.width = '2px'
+        this.#setStyle()
     }
-
+    #setStyle() {
+        this.style.userSelect = 'none'
+        this.style.cursor = 'pointer'
+        this.style.display = this._style.display
+        //this.style.color = this._style.color.fore.hex()
+        //this.style.backgroundColor = this._style.color.back.hex()
+        this.style.color = this._style.color.fore
+        this.style.backgroundColor = this._style.color.back
+        this.style.boxSizing = 'border-box'
+        //this.style.border = `${this._style.border.width} ${this._style.border.style} ${this._style.border.color}`
+        this.style.borderWidth = this._style.border.width
+        this.style.borderStyle = this._style.border.style
+        this.style.borderColor = this._style.border.color
+        this.style.borderRadius  = this._style.border.radius
+        //this.style.outlineWidth = this._style.outline.width
+        this.style.outlineStyle = this._style.outline.style
+        this.style.outlineColor = this._style.outline.color
+        this.style.outlineOffset = this._style.outline.offset
+        //`border-width:${this._style.border.width};border-style:${this._style.border.style};border-color:${this._style.border.color};${this.#borderRadius()}`
+        //`outline-width:${this._style.outline.width};outline-style:${this._style.outline.style};outline-color:${this._style.outline.color};outline-offset:${this._style.outline.offset};`
+    }
 }
 customElements.define('van-button', VanButton);
 
