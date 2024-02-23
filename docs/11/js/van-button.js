@@ -73,7 +73,7 @@ class VanButton extends HTMLElement {
             case 'onhold': return this.#setFn('onHold', oldValue, newValue)
             case 'onced': return this.onced = true
             case 'extended':
-            case 'radiused':
+            case 'radiused': return this.radiused = newValue
             case 'disabled': return this.disabled = newValue
             case 'hold': return this.hold = newValue
             case 'once': return this.once = newValue
@@ -101,6 +101,8 @@ class VanButton extends HTMLElement {
     }
     set disabled(v) { this._state = this.States.isDisabled }
     get disabled( ) { return (this.States.isDisabled===this._state) }
+    set radiused(v) { this._style.border.radius = '10%' }
+    set radius(v) { this._style.border.radius = v; }
     #addEventListener() {
         this.addEventListener('push', async(e)=>{
             console.log(e);
@@ -117,11 +119,6 @@ class VanButton extends HTMLElement {
             this.#setStyle()
         }
     }
-    //set radius(v) { this._style.border.radius = v }
-    set radius(v) {
-        this._style.border.radius = v
-    }
-
     set baseColor(v) { this.ColorSchemes.custom.base = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
     set mainColor(v) { this.ColorScheme.custom.main = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
     set accentColor(v) { this.ColorScheme.custom.accent = chroma(v); this._colorScheme = this.ColorSchemes.custom; }
