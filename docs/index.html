@@ -11,18 +11,19 @@ body {
 <script>
 window.addEventListener('DOMContentLoaded', async(event) => {
     const items = [
+        'colorsプロパティを用意した（HTML属性,JSプロパティ）他JSプロパティ（baseColor,mainColor,accentColor）',
         'radiused,radiusプロパティを用意した（HTML属性,JSプロパティ）',
         'disabledプロパティを用意した（HTML属性,JSプロパティ）',
         'once,holdのHTML属性とJSプロパティを用意した',
         'WebComponent化',
         '改名（longPushed→hold, pushed→push）',
-        '予定：border',
+        'border',
         'リファクタリング？',
         '連続押下防止（一定時間disabled）',
-        '最小限（VanJS, Parse(h1,p), UI(Textarea, 書字方向ボタン, 縦ホイールで横スクロール)）',
-        'リファクタリング',
-        'イベント対応',
         '押下,長押し,二重実行防止（マウス、キーボード両方対応）',
+        'イベント対応',
+        'リファクタリング',
+        '最小限（VanJS, Parse(h1,p), UI(Textarea, 書字方向ボタン, 縦ホイールで横スクロール)）',
     ]
     
     const { h1, p, ol, li, a, code } = van.tags
@@ -35,7 +36,8 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             //items.map((item, i)=>li(a({href:()=>(i<7) ? `app-${i}.html` : `${i}/app.html`}, item)))
             //items.map((item, i)=>li(a({href:()=>`${i}/index.html`}, item)))
             //items.reverse().map((item, i)=>li(a({href:()=>`${i}/index.html`}, item)))
-            items.reverse().map((item, i)=>li(a({href:()=>`${items.length-(i+1)}/index.html`}, item)))
+            //items.reverse().map((item, i)=>li(a({href:()=>`${items.length-(i+1)}/index.html`}, item)))
+            items.map((item, i)=>li(a({href:()=>`${items.length-(i+1)}/index.html`}, item)))
         ),
     )
 })
